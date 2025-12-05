@@ -4,9 +4,9 @@ set -o errexit
 
 # Install dependencies
 pip install -r requirements.txt
-
-# Convert static files (CSS/JS for admin panel)
 python manage.py collectstatic --no-input
 
 # Apply database migrations
 python manage.py migrate
+
+python create_superuser.py
