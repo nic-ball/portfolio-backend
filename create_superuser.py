@@ -2,7 +2,7 @@ import os
 import django
 from django.contrib.auth import get_user_model
 
-os.environ.setDefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 django.setup()
 
 User = get_user_model()
@@ -14,6 +14,6 @@ password = os.environ.get('DJANGO_SUPERUSER_PASSWORD', 'thisIsNotTheWay69!')
 if not User.objects.filter(username=username).exists():
     print(F"Creating superuser: {username}")
     User.objects.create_superuser(username, email, password)
-    print("SUperuser created successfully.")
+    print("Superuser created successfully.")
 else:
-    print(F"Superuser {username} already exists.")
+    print(f"Superuser {username} already exists.")
