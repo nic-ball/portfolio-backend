@@ -132,5 +132,8 @@ ALLOWED_HOSTS = ['*'] # Allow all hosts for development, CHANGE in production!!!
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1.5173",
+    "http://localhost:8000",
     "https://nic-ball.github.io", # Production React frontend URL
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True  # For development only, CHANGE in production!!!!
