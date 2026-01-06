@@ -5,6 +5,8 @@ from google.oauth2 import service_account
 
 # Google Cloud Storage Settings
 if os.environ.get('USE_GCS') == 'TRUE':
+    INSTALLED_APPS += ['storages']
+    
     GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
         os.path.join(BASE_DIR, 'gcs_key.json')
     )
