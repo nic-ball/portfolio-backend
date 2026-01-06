@@ -1,6 +1,37 @@
 import os
 from pathlib import Path
 import dj_database_url
+from google.oauth2 import service_account
+
+# Google Cloud Storage Settings
+if os.environ.get('USE_GCS') == 'TRUE':
+    GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
+        os.path.join(BASE_DIR, 'gcs_key.json')
+    )
+    DEFAULT_FILE_STORAGE = 'storages.backends.gcs.GoogleCloudStorage'
+    GS_BUCKET_NAME = 'portfolio-media-assets-dev'
+    GS_DEFAULT_ACL = 'publicRead'
+
+    GS_FILE_OVERWRITE = False
+
+# Database (Updated logic to check for 'DB_HOST')
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'portfoliodb',
+        'USER': 'adminuser',
+        'PASSWORD': 'donTDoThisInProduction', # Use ENV variable in production
+        'HOST': 'localhost',
+        'PORT': '',
+    }
+}
+
+ALLOWED_HOSTS = [
+    '35.211.30.11',
+    'localhost',
+    '127.0.0.1',
+    '.onrender.com',
+]
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,6 +54,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'api',
+    'storages',
 ]
 
 MIDDLEWARE = [
@@ -111,7 +143,19 @@ if RENDER_EXTERNAL_HOSTNAME:
     CSRF_TRUSTED_ORIGINS = [f"https://{RENDER_EXTERNAL_HOSTNAME}"]
 
 # Database
-if 'DATABASE_URL' in os.environ:
+if os.environ.get('GOOGLE_DB_USER'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'portfoliodb',
+            'USER': os.environ.get('GOOGLE_DB_USER'),
+            'PASSWORD': os.environ.get('GOOGLE_DB_PASSWORD'),
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    }
+
+elif 'DATABASE_URL' in os.environ:
     DATABASES = {
         'default': dj_database_url.config(
             default=os.environ['DATABASE_URL'],
@@ -142,3 +186,16 @@ if RENDER_EXTERNAL_HOSTNAME:
 
 if RENDER_EXTERNAL_HOSTNAME:
     CSRF_TRUSTED_ORIGINS = [f"https://{RENDER_EXTERNAL_HOSTNAME}"]
+
+
+# Google Cloud Storage Settings
+if os.environ.get('USE_GCS') == 'TRUE':
+    GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
+        os.path.join(BASE_DIR, 'gcs_key.json')
+    )
+    
+    GS_BUCKET_NAME = 'portfolio-media-assets-dev'
+    GS_DEFAULT_ACL = 'publicRead'
+    GS_FILE_OVERWRITE = False
+
+    DEFAULT_FILE_STORAGE = 'storages.backends.gcs.GoogleCloudStorage'
