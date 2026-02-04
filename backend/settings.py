@@ -140,6 +140,14 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
+# CSRF TRUSTED ORIGINS
+# This tells Django: "Trust requests if the Host header matches these domains"
+CSRF_TRUSTED_ORIGINS = [
+    'http://api.nic-ball.co.uk',
+    'https://api.nic-ball.co.uk',
+    'http://test-api.nic-ball.co.uk',
+    'https://test-api.nic-ball.co.uk',
+]
 
 # -----------------------------------------------------------------------------
 # STATIC & MEDIA FILES (Served by Nginx in Prod)
