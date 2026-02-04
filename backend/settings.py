@@ -1,50 +1,37 @@
+
 import os
 from pathlib import Path
-import dj_database_url
-from google.oauth2 import service_account
-
-# Google Cloud Storage Settings
-if os.environ.get('USE_GCS') == 'TRUE':
-    INSTALLED_APPS += ['storages']
-    
-    GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
-        os.path.join(BASE_DIR, 'gcs_key.json')
-    )
-    DEFAULT_FILE_STORAGE = 'storages.backends.gcs.GoogleCloudStorage'
-    GS_BUCKET_NAME = 'portfolio-media-assets-dev'
-    GS_DEFAULT_ACL = 'publicRead'
-
-    GS_FILE_OVERWRITE = False
-
-# Database (Updated logic to check for 'DB_HOST')
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'portfoliodb',
-        'USER': 'adminuser',
-        'PASSWORD': 'donTDoThisInProduction', # Use ENV variable in production
-        'HOST': 'localhost',
-        'PORT': '',
-    }
-}
-
-ALLOWED_HOSTS = [
-    '35.211.30.11',
-    'localhost',
-    '127.0.0.1',
-    '.onrender.com',
-]
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-default-key-123') # Use ENV variable in production, default to a dummy key locally
+# -----------------------------------------------------------------------------
+# SECURITY SETTINGS
+# -----------------------------------------------------------------------------
 
-# DEBUG mode - Only set Debug to True if not on Render
-DEBUG = 'RENDER' not in os.environ
+# Quick-start development settings - unsuitable for production
+# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
-# Application definition
+# SECURITY WARNING: keep the secret key used in production secret!
+# We fetch this from .env.prod or .env.test. Default is a dummy for local dev.
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-local-dev-key')
+
+# SECURITY WARNING: don't run with debug turned on in production!
+# In Docker, we pass DEBUG=0 in .env.prod and DEBUG=1 in .env.test
+DEBUG = int(os.environ.get('DEBUG', 1))
+
+# ALLOWED_HOSTS
+# Defines which domain names this Django instance will answer to.
+# We pass a comma-separated string in the .env file (e.g., "api.example.co.uk,localhost")
+if 'ALLOWED_HOSTS' in os.environ:
+    ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(',')
+else:
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
+
+
+# -----------------------------------------------------------------------------
+# APPLICATION DEFINITION
+# -----------------------------------------------------------------------------
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -53,16 +40,21 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'corsheaders',
-    'rest_framework',
+
+    # Third Party Apps
+    'corsheaders',      # For Frontend connection
+    'rest_framework',   # For API
+
+    # Your Apps
     'api',
-    'storages',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    "whitenoise.middleware.WhiteNoiseMiddleware",
+    
+    # CORS must be here (Before CommonMiddleware)
     'corsheaders.middleware.CorsMiddleware',
+    
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -80,6 +72,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -90,8 +83,37 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
+
+# -----------------------------------------------------------------------------
+# DATABASE
+# -----------------------------------------------------------------------------
+
+# Logic: If in Docker (Postgres), use Env variables. 
+# If on local (Laptop), use SQLite.
+
+if os.environ.get('POSTGRES_DB'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('POSTGRES_DB'),
+            'USER': os.environ.get('POSTGRES_USER'),
+            'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
+            'HOST': os.environ.get('POSTGRES_HOST'), # This matches service name 'db-prod'
+            'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+        }
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+
+
+# -----------------------------------------------------------------------------
+# PASSWORD VALIDATION
+# -----------------------------------------------------------------------------
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -109,95 +131,54 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
+# -----------------------------------------------------------------------------
+# INTERNATIONALIZATION
+# -----------------------------------------------------------------------------
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
+# -----------------------------------------------------------------------------
+# STATIC & MEDIA FILES (Served by Nginx in Prod)
+# -----------------------------------------------------------------------------
 
-STATIC_URL = 'static/'
+# URL to access files in browser
+STATIC_URL = '/static/'
+MEDIA_URL = '/media/'
 
+# Where Python puts files when you run 'collectstatic'
+# These match the volumes defined in docker-compose.yml
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
 
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+# -----------------------------------------------------------------------------
+# CORS (Cross-Origin Resource Sharing)
+# -----------------------------------------------------------------------------
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-ALLOWED_HOSTS = [] # Allow Render URL + localhost for dev
-RENDER_EXTERNAL_HOSTNAME = os.getenv("RENDER_EXTERNAL_HOSTNAME")
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
-
-# CSRF: Essential for Admin Login on Render
-if RENDER_EXTERNAL_HOSTNAME:
-    CSRF_TRUSTED_ORIGINS = [f"https://{RENDER_EXTERNAL_HOSTNAME}"]
-
-# Database
-if os.environ.get('GOOGLE_DB_USER'):
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'portfoliodb',
-            'USER': os.environ.get('GOOGLE_DB_USER'),
-            'PASSWORD': os.environ.get('GOOGLE_DB_PASSWORD'),
-            'HOST': 'localhost',
-            'PORT': '5432',
-        }
-    }
-
-elif 'DATABASE_URL' in os.environ:
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=os.environ['DATABASE_URL'],
-            conn_max_age=600
-        )
-    }
-else:
-    # Local
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
-
-# CORS settings
+# Allowed origins for React Frontend
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "https://nic-ball.github.io", # Uncomment and set your production frontend URL
+    "http://portfolio.nic-ball.co.uk",
+    "https://portfolio.nic-ball.co.uk",
+    "http://nic-ball.co.uk",
+    "https://nic-ball.co.uk",
 ]
-CORS_ALLOW_ALL_ORIGINS = False  # Allow all origins for development, CHANGE in production!!!!
 
-ALLOWED_HOSTS = []
-RENDER_EXTERNAL_HOSTNAME = os.getenv("RENDER_EXTERNAL_HOSTNAME")
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+# -----------------------------------------------------------------------------
+# DEFAULT PRIMARY KEY FIELD TYPE
+# -----------------------------------------------------------------------------
 
-if RENDER_EXTERNAL_HOSTNAME:
-    CSRF_TRUSTED_ORIGINS = [f"https://{RENDER_EXTERNAL_HOSTNAME}"]
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# -----------------------------------------------------------------------------
+# EMAIL (Contact Form)
+# -----------------------------------------------------------------------------
 
-# Google Cloud Storage Settings
-if os.environ.get('USE_GCS') == 'TRUE':
-    GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
-        os.path.join(BASE_DIR, 'gcs_key.json')
-    )
-    
-    GS_BUCKET_NAME = 'portfolio-media-assets-dev'
-    GS_DEFAULT_ACL = 'publicRead'
-    GS_FILE_OVERWRITE = False
-
-    DEFAULT_FILE_STORAGE = 'storages.backends.gcs.GoogleCloudStorage'
+# For now, print emails to the Docker logs (console).
+# Later, we can swap this for SMTP (Gmail/SendGrid).
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
