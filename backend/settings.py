@@ -23,11 +23,12 @@ DEBUG = int(os.environ.get('DEBUG', 1))
 # ALLOWED_HOSTS
 # Defines which domain names this Django instance will answer to.
 # We pass a comma-separated string in the .env file (e.g., "api.example.co.uk,localhost")
-if 'ALLOWED_HOSTS' in os.environ:
-    ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(',')
-else:
-    ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
+# if 'ALLOWED_HOSTS' in os.environ:
+#     ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(',')
+# else:
+#     ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']/
 
+ALLOWED_HOSTS = ['*']
 
 # -----------------------------------------------------------------------------
 # APPLICATION DEFINITION
