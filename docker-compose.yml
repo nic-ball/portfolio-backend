@@ -71,7 +71,7 @@ services:
       - media_volume_prod:/home/app/web/mediafiles
       - ./frontend_build:/var/www/portfolio
       - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www.certbot
+      - ./certbot/www:/var/www/certbot
     depends_on:
       - web-prod
       - web-test
