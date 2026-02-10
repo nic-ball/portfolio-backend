@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # ----------------------------
+  # PRODUCTION SERVICES
+  # ----------------------------
+  web-prod:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    command: gunicorn backend.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - static_volume_prod:/app/staticfiles
+      - media_volume_prod:/app/mediafiles
+    env_file:
+      - .env.prod
+    depends_on:
+      - db-prod
+    restart: always
+
+  db-prod:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    env_file:
+      - .env.prod
+    restart: always
+
+  # ----------------------------
+  # TEST (STAGING) SERVICES
+  # ----------------------------
+  web-test:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    command: gunicorn backend.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - static_volume_test:/app/staticfiles
+    env_file:
+      - .env.test
+    depends_on:
+      - db-test
+    restart: always
+
+  db-test:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data_test:/var/lib/postgresql/data
+    env_file:
+      - .env.test
+    restart: always
+
+# --- SSL CERTIFICATE BOT ---
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+
+  # ----------------------------
+  # NGINX SETTINGS
+  # ----------------------------
+  nginx:
+    image: nginx:1.25-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - static_volume_prod:/home/app/web/staticfiles
+      - media_volume_prod:/home/app/web/mediafiles
+      - ./frontend_build:/var/www/portfolio
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www.certbot
+    depends_on:
+      - web-prod
+      - web-test
+    restart: always
+
+volumes:
+  postgres_data_prod:
+  postgres_data_test:
+  static_volume_prod:
+  static_volume_test:
+  media_volume_prod:
+
