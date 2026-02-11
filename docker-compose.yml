@@ -16,6 +16,9 @@ services:
       - .env.prod
     depends_on:
       - db-prod
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     restart: always
 
   db-prod:
@@ -40,6 +43,9 @@ services:
       - .env.test
     depends_on:
       - db-test
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     restart: always
 
   db-test:
