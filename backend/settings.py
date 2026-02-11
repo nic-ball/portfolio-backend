@@ -184,9 +184,23 @@ CORS_ALLOWED_ORIGINS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # -----------------------------------------------------------------------------
-# EMAIL (Contact Form)
+# EMAIL CONFIGURATION (SMTP)
 # -----------------------------------------------------------------------------
 
-# For now, print emails to the Docker logs (console).
-# Later, we can swap this for SMTP (Gmail/SendGrid).
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# If we have email settings in Env, use SMTP. Otherwise print to console.
+if os.environ.get('EMAIL_HOST_USER'):
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.gmail.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')       # Gmail address
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD') # App Password
+    
+    # Who the email comes FROM (Must match the authenticated user for Gmail)
+    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+    
+    # Who receives the contact form emails
+    # We can use a separate env var, or just send it to yourself
+    RECIPIENT_ADDRESS = os.environ.get('EMAIL_RECIPIENT', EMAIL_HOST_USER)
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

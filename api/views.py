@@ -18,19 +18,13 @@ class ContactCreate(generics.CreateAPIView):
         # Save to db
         serializer.save()
         # Send email notification to site admin
+        send_mail(
+            subject=f"Portfolio Contact: {data['name']}",
+            message=f"From: {data['email']}\n\n{data['message']}",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[settings.RECIPIENT_ADDRESS], 
+            fail_silently=False,
+        )
         # Console in dev, will send REAL email in Production
         data = serializer.validated_data
         print(f"------------\nNEW MESSAGE RECIEVED:\nFrom: {data['name']} ({data['email']})\nMessage: {data['message']}\n------------")
-
-        # Uncomment send_mail below to enable real email sending in production
-        ...
-
-        # send_mail(
-        #     subject=f"Portfolio Contact: {data['name']}",
-        #     message=f"From: {data['email']}\n\n{data['message']}",
-        #     from_email=settings.DEFAULT_FROM_EMAIL,
-        #     recipient_list=[settings.ADMIN_EMAIL],
-        #     fail_silently=False,
-        # )
-
-        ...
