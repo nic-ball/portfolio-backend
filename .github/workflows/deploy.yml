@@ -1,0 +1,61 @@
+name: Deploy Backend
+
+# Trigger on push to either branch
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd ~/app
+            
+            # 1. Update the code on the server
+            # We fetch all branches to ensure we have the latest commits
+            git fetch --all
+            
+            # 2. Logic: Check which branch triggered this workflow
+            if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+              echo "🚀 DEPLOYING TO PRODUCTION..."
+              
+              # Hard reset to match origin/main exactly
+              git checkout main
+              git reset --hard origin/main
+              
+              # Rebuild only the Production container
+              docker compose up -d --build --no-deps web-prod
+              
+              # Run Migrations automatically
+              docker compose exec -T web-prod python manage.py migrate
+              docker compose exec -T web-prod python manage.py collectstatic --no-input
+              
+            elif [ "${{ github.ref }}" == "refs/heads/dev" ]; then
+              echo "🧪 DEPLOYING TO TEST SERVER..."
+              
+              # Hard reset to match origin/dev exactly
+              git checkout dev
+              git reset --hard origin/dev
+              
+              # Rebuild only the Test container
+              docker compose up -d --build --no-deps web-test
+              
+              # Run Migrations automatically
+              docker compose exec -T web-test python manage.py migrate
+              docker compose exec -T web-test python manage.py collectstatic --no-input
+            fi
+            
+            # Cleanup old Docker images to save space
+            docker image prune -f
