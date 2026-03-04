@@ -21,7 +21,7 @@ class Project(models.Model):
     
 class ContactMessage(models.Model):
     name = models.CharField(max_length=100)
-    email = models.EmailField(type="email")
+    email = models.EmailField()
     message = models.TextField(max_length=2000, help_text="Your message (max 2000 characters)")
     created_at = models.DateTimeField(auto_now_add=True)
 
