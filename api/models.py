@@ -2,7 +2,7 @@ from django.db import models
 
 class Project(models.Model):
     title = models.CharField(max_length=100)
-    description = models.TextField()
+    description = models.TextField(max_length=1000, help_text="Brief description of the project (max 1000 characters)")
     technologies = models.CharField(max_length=200, help_text="Arduino, C++, Python, React")
 
     # Links to code repository and live demo
@@ -21,8 +21,8 @@ class Project(models.Model):
     
 class ContactMessage(models.Model):
     name = models.CharField(max_length=100)
-    email = models.EmailField()
-    message = models.TextField()
+    email = models.EmailField(type="email")
+    message = models.TextField(max_length=2000, help_text="Your message (max 2000 characters)")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
