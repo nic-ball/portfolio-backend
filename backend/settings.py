@@ -187,20 +187,22 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # EMAIL CONFIGURATION (SMTP)
 # -----------------------------------------------------------------------------
 
-# If we have email settings in Env, use SMTP. Otherwise print to console.
+# If we have email settings in Env (Prod/Test), use Gmail. Otherwise, use console (Local).
 if os.environ.get('EMAIL_HOST_USER'):
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = 'smtp.gmail.com'
     EMAIL_PORT = 587
     EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')       # Gmail address
-    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD') # App Password
     
-    # Who the email comes FROM (Must match the authenticated user for Gmail)
+    # Read from the .env.prod file
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')       
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD') 
+    
+    # Required variables for the views.py file
     DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-    
-    # Who receives the contact form emails
-    # We can use a separate env var, or just send it to yourself
     RECIPIENT_ADDRESS = os.environ.get('EMAIL_RECIPIENT', EMAIL_HOST_USER)
 else:
+    # Fallback for local laptop development
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    DEFAULT_FROM_EMAIL = 'dummy@example.com'
+    RECIPIENT_ADDRESS = 'dummy@example.com'
