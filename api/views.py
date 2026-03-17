@@ -17,6 +17,7 @@ class ContactCreate(generics.CreateAPIView):
     def perform_create(self, serializer):
         # Save to db
         serializer.save()
+        data = serializer.validated_data
         # Send email notification to site admin
         send_mail(
             subject=f"Portfolio Contact: {data['name']}",
