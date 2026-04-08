@@ -27,6 +27,15 @@ services:
       - .env.prod
     restart: always
 
+  # BLOG SERVICE (Next.js)
+  blog-prod:
+    image: ghcr.io/nic-ball/portfolio-blog:latest
+    env_file:
+      - .env.blog
+    depends_on:
+      - db-prod
+    restart: always
+
   # ----------------------------
   # TEST (STAGING) SERVICES
   # ----------------------------
