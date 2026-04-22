@@ -140,6 +140,10 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
+# Force django to treat the proxy as secure
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
 # CSRF TRUSTED ORIGINS
 # This tells Django: "Trust requests if the Host header matches these domains"
 CSRF_TRUSTED_ORIGINS = [
